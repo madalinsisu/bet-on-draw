@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Draw Betting Strategy Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>⚽ Draw Betting Strategy</h1>
+        </header>
+
+        <main class="main-content">
+            <!-- Navigation Tabs -->
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-view="competitions">🏆 Competitions</button>
+                <button class="nav-tab" data-view="teams">👥 Teams</button>
+                <button class="nav-tab" data-view="games">⚽ Games</button>
+                <button class="nav-tab" data-view="bets">💰 Bets</button>
+                <button class="nav-tab" data-view="stats">📊 Stats</button>
+            </nav>
+
+            <!-- Competitions View -->
+            <div id="competitionsView" class="view-content active">
+                <div class="view-header">
+                    <h2>🏆 Manage Competitions</h2>
+                    <button class="btn btn-primary" id="addCompetitionBtn">Add Competition</button>
+                </div>
+                
+                <div id="competitionsList" class="list-container">
+                    <!-- Competitions will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Teams View -->
+            <div id="teamsView" class="view-content">
+                <div class="view-header">
+                    <h2>👥 Teams in <span id="currentCompetitionName">Select Competition</span></h2>
+                    <div class="header-actions">
+                        <select id="competitionSelector" class="form-select">
+                            <option value="">Select Competition</option>
+                        </select>
+                        <button class="btn btn-primary" id="addTeamBtn">Add Team</button>
+                    </div>
+                </div>
+                
+                <div id="teamsList" class="list-container">
+                    <!-- Teams will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Games View -->
+            <div id="gamesView" class="view-content">
+                <div class="view-header">
+                    <h2>⚽ Manage Games</h2>
+                    <div class="header-actions">
+                        <select id="gameCompetitionSelector" class="form-select">
+                            <option value="">Select Competition</option>
+                        </select>
+                        <button class="btn btn-primary" id="addGameBtn">Add Game</button>
+                    </div>
+                </div>
+                
+                <div id="gamesList" class="list-container">
+                    <!-- Games will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Bets View -->
+            <div id="betsView" class="view-content">
+                <div class="view-header">
+                    <h2>💰 Manage Bets</h2>
+                    <div class="header-actions">
+                        <select id="betCompetitionSelector" class="form-select">
+                            <option value="">Select Competition</option>
+                        </select>
+                        <select id="betTeamSelector" class="form-select">
+                            <option value="">Select Team</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="betsList" class="list-container">
+                    <!-- Bets will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Stats View -->
+            <div id="statsView" class="view-content">
+                <div class="view-header">
+                    <h2>📊 Statistics</h2>
+                    <div class="header-actions">
+                        <select id="statsCompetitionSelector" class="form-select">
+                            <option value="">All Competitions</option>
+                        </select>
+                        <select id="statsTeamSelector" class="form-select">
+                            <option value="">All Teams</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="statsContent" class="stats-container">
+                    <!-- Statistics will be loaded here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Competition Modal -->
+    <div id="competitionModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>🏆 Add Competition</h3>
+            <form id="competitionForm">
+                <div class="form-group">
+                    <label for="competitionName">Competition Name:</label>
+                    <input type="text" id="competitionName" required placeholder="e.g., Premier League">
+                </div>
+                <div class="form-group">
+                    <label for="competitionCountry">Country:</label>
+                    <input type="text" id="competitionCountry" required placeholder="e.g., England">
+                </div>
+                <button type="submit" class="btn btn-primary">Add Competition</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Team Modal -->
+    <div id="teamModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>👥 Add Team(s)</h3>
+            <div class="toggle-group" style="display: flex; gap: 10px; margin-bottom: 16px;">
+                <button type="button" id="singleTeamTab" class="btn btn-secondary active">Add Team</button>
+                <button type="button" id="multiTeamTab" class="btn btn-secondary">Add Teams</button>
+            </div>
+            <form id="singleTeamForm" style="display: block;">
+                <div class="form-group">
+                    <label for="teamName">Team Name:</label>
+                    <input type="text" id="teamName" required placeholder="e.g., Manchester United">
+                </div>
+                <button type="submit" class="btn btn-primary">Add Team</button>
+            </form>
+            <form id="multiTeamForm" style="display: none;">
+                <div class="form-group">
+                    <label for="bulkTeams">Teams (comma-separated):</label>
+                    <input type="text" id="bulkTeams" required placeholder="e.g., Team A, Team B, Team C">
+                </div>
+                <button type="submit" class="btn btn-primary">Add Teams</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Game Modal -->
+    <div id="gameModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>⚽ Add Game</h3>
+            <form id="gameForm">
+                <div class="form-group">
+                    <label for="gameHomeTeam">Home Team:</label>
+                    <select id="gameHomeTeam" required>
+                        <option value="">Select Home Team</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="gameAwayTeam">Away Team:</label>
+                    <select id="gameAwayTeam" required>
+                        <option value="">Select Away Team</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="gameDate">Game Date:</label>
+                    <input type="date" id="gameDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="drawOdds">Draw Odds:</label>
+                    <input type="number" id="drawOdds" min="1" step="0.01" placeholder="3.50">
+                    <small>Leave empty if not known yet</small>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Game</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bet Modal -->
+    <div id="betModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>💰 Place Bet</h3>
+            <form id="betForm">
+                <div class="form-group">
+                    <label>Game:</label>
+                    <div id="betGameInfo" class="game-info"></div>
+                </div>
+                <div class="form-group">
+                    <label for="betTeam">Select Team to Bet For:</label>
+                    <select id="betTeam" required>
+                        <option value="">Select Team</option>
+                    </select>
+                    <small>Choose which team's strategy to follow</small>
+                </div>
+                <div class="form-group">
+                    <label for="betAmount">Bet Amount ($):</label>
+                    <input type="number" id="betAmount" min="0" step="0.01" required>
+                    <small id="betStrategyInfo"></small>
+                </div>
+                <div class="form-group">
+                    <label for="betOdds">Draw Odds:</label>
+                    <input type="number" id="betOdds" min="1" step="0.01" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Place Bet</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>🏆 Update Result</h3>
+            <form id="resultForm">
+                <div class="form-group">
+                    <label>Game Result:</label>
+                    <div class="result-buttons">
+                        <button type="button" class="result-btn" data-result="home">Home Win</button>
+                        <button type="button" class="result-btn" data-result="away">Away Win</button>
+                        <button type="button" class="result-btn" data-result="draw">Draw</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Save Result</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
