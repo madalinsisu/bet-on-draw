@@ -81,6 +81,7 @@ class DrawBettingTracker {
         };
 
         this.teams.push(team);
+        this.teams.sort((a, b) => a.name.localeCompare(b.name));
         this.saveData();
         this.renderAll();
         this.showNotification('Team added successfully!', 'success');
