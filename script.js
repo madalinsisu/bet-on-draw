@@ -8,7 +8,7 @@ class DrawBettingTracker {
         this.currentView = 'competitions';
         this.selectedCompetition = null;
         this.selectedTeam = null;
-        
+
         this.init();
     }
 
@@ -162,20 +162,24 @@ class DrawBettingTracker {
         }
         // If no wins yet, calculate total losses using the same formula
         if (lastWinIndex === -1) {
-            const totalLosses = teamBets.reduce((sum, bet) => sum + bet.amount, 0);
-            if (currentOdds && currentOdds > 0) {
-                return lastBet.amount + (totalLosses * (lastBet.amount / currentOdds));
-            }
-            return lastBet.amount + totalLosses;
+            lastWinIndex = 0;
         }
-        // Calculate losses since last win
-        const lossesSinceLastWin = teamBets
-            .slice(lastWinIndex + 1)
-            .reduce((sum, bet) => sum + bet.amount, 0);
+
+        const firstBetInCurrentSeries = teamBets[0];
+        const totalLosses = teamBets.reduce((sum, bet) => sum + bet.amount, 0);
         if (currentOdds && currentOdds > 0) {
-            return lastBet.amount + (lossesSinceLastWin * (lastBet.amount / currentOdds));
+            return firstBetInCurrentSeries.amount + (totalLosses * (lastBet.amount / currentOdds));
         }
-        return lastBet.amount + lossesSinceLastWin;
+        return firstBetInCurrentSeries.amount + totalLosses;
+
+        // // Calculate losses since last win
+        // const lossesSinceLastWin = teamBets
+        //     .slice(lastWinIndex + 1)
+        //     .reduce((sum, bet) => sum + bet.amount, 0);
+        // if (currentOdds && currentOdds > 0) {
+        //     return lastBet.amount + (lossesSinceLastWin * (lastBet.amount / currentOdds));
+        // }
+        // return lastBet.amount + lossesSinceLastWin;
     }
 
     // Calculate current drawdown for a team
@@ -197,7 +201,7 @@ class DrawBettingTracker {
     calculateTotalWinnings(teamId) {
         const teamBets = this.bets.filter(b => b.teamId === teamId);
         const completedBets = teamBets.filter(b => b.result !== null);
-        
+
         return completedBets
             .filter(b => b.result === 'win')
             .reduce((sum, bet) => sum + (bet.amount * bet.odds), 0);
@@ -229,14 +233,14 @@ class DrawBettingTracker {
         const gameIndex = this.games.findIndex(g => g.id === gameId);
         if (gameIndex !== -1) {
             this.games[gameIndex].result = result;
-            
+
             // Update corresponding bet results
             this.bets.forEach(bet => {
                 if (bet.gameId === gameId) {
                     bet.result = result === 'draw' ? 'win' : 'loss';
                 }
             });
-            
+
             this.saveData();
             this.renderAll();
             this.showNotification('Result updated successfully!', 'success');
@@ -268,7 +272,7 @@ class DrawBettingTracker {
     // Render competitions view
     renderCompetitions() {
         const container = document.getElementById('competitionsList');
-        
+
         if (this.competitions.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
@@ -314,7 +318,7 @@ class DrawBettingTracker {
     renderTeams() {
         const container = document.getElementById('teamsList');
         const competitionName = document.getElementById('currentCompetitionName');
-        
+
         if (this.selectedCompetition) {
             const competition = this.competitions.find(c => c.id === this.selectedCompetition);
             competitionName.textContent = competition ? competition.name : 'Unknown';
@@ -323,7 +327,7 @@ class DrawBettingTracker {
         }
 
         const teamsInCompetition = this.teams.filter(t => t.competitionId === this.selectedCompetition);
-        
+
         if (!this.selectedCompetition) {
             container.innerHTML = `
                 <div class="empty-state">
@@ -430,9 +434,9 @@ class DrawBettingTracker {
     // Render games view
     renderGames() {
         const container = document.getElementById('gamesList');
-        
+
         let filteredGames = this.games;
-        
+
         if (this.selectedCompetition) {
             filteredGames = filteredGames.filter(g => g.competitionId === this.selectedCompetition);
         }
@@ -471,7 +475,7 @@ class DrawBettingTracker {
             const gameDate = new Date(game.gameDate).toLocaleDateString();
             const isUpcoming = new Date(game.gameDate) > new Date();
             const hasBet = this.bets.some(b => b.gameId === game.id);
-            
+
             return `
                 <div class="game-card">
                     <div class="game-header">
@@ -529,13 +533,13 @@ class DrawBettingTracker {
     // Render bets view
     renderBets() {
         const container = document.getElementById('betsList');
-        
+
         let filteredBets = this.bets;
-        
+
         if (this.selectedCompetition) {
             filteredBets = filteredBets.filter(b => b.competitionId === this.selectedCompetition);
         }
-        
+
         if (this.selectedTeam) {
             filteredBets = filteredBets.filter(b => b.teamId === this.selectedTeam);
         }
@@ -557,7 +561,7 @@ class DrawBettingTracker {
                 const homeTeam = this.teams.find(t => t.id === game.homeTeamId);
                 const awayTeam = this.teams.find(t => t.id === game.awayTeamId);
                 const isPending = bet.result === null;
-                
+
                 return {
                     bet,
                     game,
@@ -625,15 +629,15 @@ class DrawBettingTracker {
     // Render stats view
     renderStats() {
         const container = document.getElementById('statsContent');
-        
+
         let filteredBets = this.bets;
         let filteredTeams = this.teams;
-        
+
         if (this.selectedCompetition) {
             filteredBets = filteredBets.filter(b => b.competitionId === this.selectedCompetition);
             filteredTeams = filteredTeams.filter(t => t.competitionId === this.selectedCompetition);
         }
-        
+
         if (this.selectedTeam) {
             filteredBets = filteredBets.filter(b => b.teamId === this.selectedTeam);
         }
@@ -667,23 +671,23 @@ class DrawBettingTracker {
                 <div>
                     <h3>👥 Team Statistics</h3>
                     ${filteredTeams.map(team => {
-                        const teamBets = filteredBets.filter(b => b.teamId === team.id);
-                        const teamWins = teamBets.filter(b => b.result === 'win').length;
-                        const teamLosses = teamBets.filter(b => b.result === 'loss').length;
-                        const teamTotalBet = teamBets.reduce((sum, bet) => sum + bet.amount, 0);
-                        const teamWinnings = teamBets
-                            .filter(b => b.result === 'win')
-                            .reduce((sum, bet) => sum + (bet.amount * bet.odds), 0);
-                        const teamProfit = teamWinnings - teamTotalBet;
-                        
-                        return `
+            const teamBets = filteredBets.filter(b => b.teamId === team.id);
+            const teamWins = teamBets.filter(b => b.result === 'win').length;
+            const teamLosses = teamBets.filter(b => b.result === 'loss').length;
+            const teamTotalBet = teamBets.reduce((sum, bet) => sum + bet.amount, 0);
+            const teamWinnings = teamBets
+                .filter(b => b.result === 'win')
+                .reduce((sum, bet) => sum + (bet.amount * bet.odds), 0);
+            const teamProfit = teamWinnings - teamTotalBet;
+
+            return `
                             <div style="background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
                                 <strong>${team.name}</strong><br>
                                 Bets: ${teamBets.length} | Wins: ${teamWins} | Losses: ${teamLosses}<br>
                                 Profit: $${teamProfit.toFixed(2)}
                             </div>
                         `;
-                    }).join('')}
+        }).join('')}
                 </div>
             </div>
         `;
@@ -694,11 +698,11 @@ class DrawBettingTracker {
         // Update competition selectors
         const competitionSelectors = [
             'competitionSelector',
-            'betCompetitionSelector', 
+            'betCompetitionSelector',
             'statsCompetitionSelector',
             'gameCompetitionSelector'
         ];
-        
+
         competitionSelectors.forEach(selectorId => {
             const selector = document.getElementById(selectorId);
             if (selector) {
@@ -769,13 +773,13 @@ class DrawBettingTracker {
             transition: transform 0.3s ease;
         `;
         notification.textContent = message;
-        
+
         document.body.appendChild(notification);
-        
+
         setTimeout(() => {
             notification.style.transform = 'translateX(0)';
         }, 100);
-        
+
         setTimeout(() => {
             notification.style.transform = 'translateX(100%)';
             setTimeout(() => {
@@ -860,7 +864,7 @@ class DrawBettingTracker {
                 const drawdown = this.calculateDrawdown(selectedTeamId);
                 const currentOdds = parseFloat(document.getElementById('betOdds').value) || null;
                 const nextBetAmount = this.calculateNextBetAmount(selectedTeamId, currentOdds);
-                
+
                 document.getElementById('betAmount').value = nextBetAmount.toFixed(2);
                 document.getElementById('betStrategyInfo').innerHTML = `
                     <strong>Current Drawdown:</strong> $${drawdown.toFixed(2)}<br>
@@ -880,7 +884,7 @@ class DrawBettingTracker {
                 const drawdown = this.calculateDrawdown(selectedTeamId);
                 const currentOdds = parseFloat(e.target.value) || null;
                 const nextBetAmount = this.calculateNextBetAmount(selectedTeamId, currentOdds);
-                
+
                 document.getElementById('betAmount').value = nextBetAmount.toFixed(2);
                 document.getElementById('betStrategyInfo').innerHTML = `
                     <strong>Current Drawdown:</strong> $${drawdown.toFixed(2)}<br>
@@ -971,13 +975,13 @@ class DrawBettingTracker {
     // Switch view
     switchView(view) {
         this.currentView = view;
-        
+
         // Update active tab
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.classList.remove('active');
         });
         document.querySelector(`[data-view="${view}"]`).classList.add('active');
-        
+
         // Update active view
         document.querySelectorAll('.view-content').forEach(content => {
             content.classList.remove('active');
@@ -1090,7 +1094,7 @@ class DrawBettingTracker {
             this.showNotification('Selected team not found', 'error');
             return;
         }
-        
+
         const betData = {
             gameId: this.currentGameId,
             teamId: selectedTeam.id,
@@ -1108,14 +1112,14 @@ class DrawBettingTracker {
     openResultModal(gameId) {
         this.currentGameId = gameId;
         const game = this.games.find(g => g.id === gameId);
-        
+
         if (game && game.result) {
             const currentResultBtn = document.querySelector(`[data-result="${game.result}"]`);
             if (currentResultBtn) {
                 currentResultBtn.classList.add('selected');
             }
         }
-        
+
         document.getElementById('resultModal').style.display = 'block';
     }
 
@@ -1123,24 +1127,24 @@ class DrawBettingTracker {
     openBetModal(gameId) {
         this.currentGameId = gameId;
         const game = this.games.find(g => g.id === gameId);
-        
+
         if (!game) return;
-        
+
         const homeTeam = this.teams.find(t => t.id === game.homeTeamId);
         const awayTeam = this.teams.find(t => t.id === game.awayTeamId);
         const gameDate = new Date(game.gameDate).toLocaleDateString();
-        
+
         // Display game info
         document.getElementById('betGameInfo').innerHTML = `
             <strong>${homeTeam ? homeTeam.name : 'Unknown'} vs ${awayTeam ? awayTeam.name : 'Unknown'}</strong><br>
             Date: ${gameDate}<br>
             Current Draw Odds: ${game.drawOdds ? game.drawOdds : 'Not set'}
         `;
-        
+
         // Populate team selector
         const betTeamSelector = document.getElementById('betTeam');
         betTeamSelector.innerHTML = '<option value="">Select Team</option>';
-        
+
         const teamsInGame = [homeTeam, awayTeam].filter(t => t);
         teamsInGame.forEach(team => {
             const option = document.createElement('option');
@@ -1148,16 +1152,16 @@ class DrawBettingTracker {
             option.textContent = team.name;
             betTeamSelector.appendChild(option);
         });
-        
+
         // Clear bet amount initially
         document.getElementById('betAmount').value = '';
         document.getElementById('betStrategyInfo').innerHTML = '';
-        
+
         // Pre-fill odds if available
         if (game.drawOdds) {
             document.getElementById('betOdds').value = game.drawOdds;
         }
-        
+
         document.getElementById('betModal').style.display = 'block';
     }
 
