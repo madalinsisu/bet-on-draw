@@ -988,6 +988,20 @@ class DrawBettingTracker {
             content.classList.remove('active');
         });
         document.getElementById(`${view}View`).classList.add('active');
+
+        // copy to clipboard
+        
+        this.copyToClipboard();
+    }
+
+    copyToClipboard() {
+        var objectToCopy = {
+            drawBetting_competitions: this.competitions,
+            drawBetting_teams: this.teams,
+            drawBetting_games: this.games,
+            drawBetting_bets: this.bets
+        };
+        navigator.clipboard.writeText(JSON.stringify(objectToCopy));
     }
 
     // Handle add competition
