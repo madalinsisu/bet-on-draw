@@ -77,7 +77,8 @@ class DrawBettingTracker {
             id: this.generateId(),
             competitionId: this.selectedCompetition,
             name: teamData.name.trim(),
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            favorite: false
         };
 
         this.teams.push(team);
@@ -96,6 +97,15 @@ class DrawBettingTracker {
             this.renderAll();
             this.showNotification('Team deleted successfully!', 'success');
         }
+    }
+
+    toggleFavorite(teamId) {
+        this.teams.filter(t => t.id === teamId).forEach(t => {
+            t.favorite = !t.favorite;
+        });
+        this.saveData();
+        this.renderAll();
+        this.showNotification('Team updated successfully!', 'success');
     }
 
     // Game Management
@@ -396,6 +406,12 @@ class DrawBettingTracker {
                 <div class="game-card">
                     <div class="game-header">
                         <div class="game-teams">
+                            <span class="favorite-icon"
+                                data-team-id="${team.id}"
+                                data-favorite="${!!team.favorite}"
+                                style="cursor:pointer; margin-right:5px;">
+                                ${!!team.favorite ? '⭐' : '☆'}
+                            </span>
                             <strong>${team.name}</strong>
                         </div>
                         <div class="result-status ${profit >= 0 ? 'result-win' : 'result-loss'}">
@@ -953,6 +969,8 @@ class DrawBettingTracker {
                 this.openResultModal(e.target.dataset.gameId);
             } else if (e.target.classList.contains('place-bet-btn')) {
                 this.openBetModal(e.target.dataset.gameId);
+            } else if (e.target.classList.contains('favorite-icon')) {
+                this.toggleFavorite(e.target.dataset.teamId);
             }
         });
 
@@ -990,7 +1008,7 @@ class DrawBettingTracker {
         document.getElementById(`${view}View`).classList.add('active');
 
         // copy to clipboard
-        
+
         this.copyToClipboard();
     }
 
