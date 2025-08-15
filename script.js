@@ -82,7 +82,14 @@ class DrawBettingTracker {
         };
 
         this.teams.push(team);
-        this.teams = this.teams.sort((a, b) => a.name.localeCompare(b.name));
+        this.teams = this.teams.sort((a, b) => {
+            if (a.favorite && !b.favorite) {
+                return -1;
+            } else if (!a.favorite && b.favorite) {
+                return 1;
+            }
+            return a.name.localeCompare(b.name)
+        });
         this.saveData();
         this.renderAll();
         this.showNotification('Team added successfully!', 'success');
@@ -102,6 +109,14 @@ class DrawBettingTracker {
     toggleFavorite(teamId) {
         this.teams.filter(t => t.id === teamId).forEach(t => {
             t.favorite = !t.favorite;
+        });
+        this.teams = this.teams.sort((a, b) => {
+            if (a.favorite && !b.favorite) {
+                return -1;
+            } else if (!a.favorite && b.favorite) {
+                return 1;
+            }
+            return a.name.localeCompare(b.name)
         });
         this.saveData();
         this.renderAll();
@@ -397,6 +412,11 @@ class DrawBettingTracker {
                 };
             })
             .sort((a, b) => {
+                if (a.team.favorite && !b.team.favorite) {
+                    return -1;
+                } else if (!a.team.favorite && b.team.favorite) {
+                    return 1;
+                }
                 if (b.profit !== a.profit) {
                     return b.profit - a.profit;
                 }
