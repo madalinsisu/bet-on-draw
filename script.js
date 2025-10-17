@@ -223,12 +223,8 @@ class DrawBettingTracker {
 
     if (betsAfterLastWin.length === 0) return 0;
 
-    const totalBet = betsAfterLastWin.reduce((sum, bet) => sum + bet.amount, 0);
-    const totalWinnings = betsAfterLastWin
-        .filter(b => b.result === 'win')
-        .reduce((sum, bet) => sum + (bet.amount * bet.odds), 0);
-
-    return totalBet - totalWinnings;
+    // Drawdown is the total of all bet amounts after the last win
+    return betsAfterLastWin.reduce((sum, bet) => sum + bet.amount, 0);
 }
 
     // Calculate total winnings for a team
