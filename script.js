@@ -168,45 +168,40 @@ class DrawBettingTracker {
 
     // Calculate next bet amount based on new strategy
     calculateNextBetAmount(teamId, currentOdds = null) {
-        const teamBets = this.bets.filter(b => b.teamId === teamId).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-        if (teamBets.length === 0) {
-            // No previous bets, user must input the initial amount manually
-            return 0;
-        }
-        const lastBet = teamBets[teamBets.length - 1];
-        // If last bet is a win, next bet should be the last initial amount used
-        if (lastBet.result === 'win') {
-            return lastBet.amount;
-        }
-        // Find the last win
-        let lastWinIndex = -1;
-        for (let i = teamBets.length - 1; i >= 0; i--) {
-            if (teamBets[i].result === 'win') {
-                lastWinIndex = i;
-                break;
-            }
-        }
-        // If no wins yet, calculate total losses using the same formula
-        if (lastWinIndex === -1) {
-            lastWinIndex = 0;
-        }
+    const teamBets = this.bets
+        .filter(b => b.teamId === teamId)
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-        const firstBetInCurrentSeries = teamBets[0];
-        const totalLosses = teamBets.reduce((sum, bet) => sum + bet.amount, 0);
-        if (currentOdds && currentOdds > 0) {
-            return firstBetInCurrentSeries.amount + (totalLosses * (lastBet.amount / currentOdds));
-        }
-        return firstBetInCurrentSeries.amount + totalLosses;
-
-        // // Calculate losses since last win
-        // const lossesSinceLastWin = teamBets
-        //     .slice(lastWinIndex + 1)
-        //     .reduce((sum, bet) => sum + bet.amount, 0);
-        // if (currentOdds && currentOdds > 0) {
-        //     return lastBet.amount + (lossesSinceLastWin * (lastBet.amount / currentOdds));
-        // }
-        // return lastBet.amount + lossesSinceLastWin;
+    if (teamBets.length === 0) {
+        return 0; // No previous bets
     }
+
+    const lastBet = teamBets[teamBets.length - 1];
+    if (lastBet.result === 'win') {
+        return lastBet.amount; // After a win, repeat the same base amount
+    }
+
+    // Find index of the last winning bet
+    const lastWinIndex = teamBets.map(b => b.result).lastIndexOf('win');
+
+    // Only consider bets after the last win
+    const betsAfterLastWin = lastWinIndex === -1
+        ? teamBets
+        : teamBets.slice(lastWinIndex + 1);
+
+    if (betsAfterLastWin.length === 0) {
+        return 0;
+    }
+
+    const firstBetInCurrentSeries = betsAfterLastWin[0];
+    const totalLosses = betsAfterLastWin.reduce((sum, bet) => sum + bet.amount, 0);
+
+    if (currentOdds && currentOdds > 0) {
+        return firstBetInCurrentSeries.amount + (totalLosses * (lastBet.amount / currentOdds));
+    }
+
+    return firstBetInCurrentSeries.amount + totalLosses;
+}
 
     // Calculate current drawdown for a team
     calculateDrawdown(teamId) {
