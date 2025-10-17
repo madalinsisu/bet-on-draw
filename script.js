@@ -173,34 +173,41 @@ class DrawBettingTracker {
         .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
     if (teamBets.length === 0) {
-        return 1; // No previous bets, start with 1
+        return 1; // ✅ no previous bets → start with 1
     }
 
     const lastBet = teamBets[teamBets.length - 1];
     if (lastBet.result === 'win') {
-        return 1; // Reset after a win
+        return 1; // ✅ reset after a win
     }
 
-    // Find index of the last winning bet
+    // Find the last win index
     const lastWinIndex = teamBets.map(b => b.result).lastIndexOf('win');
 
-    // Only consider bets after the last win
-    const betsAfterLastWin = lastWinIndex === -1
+    // Bets after the last win
+    let betsAfterLastWin = lastWinIndex === -1
         ? teamBets
         : teamBets.slice(lastWinIndex + 1);
 
+    // Exclude the last (current) bet — we’re calculating the *next* one
+    betsAfterLastWin = betsAfterLastWin.slice(0, -1);
+
     if (betsAfterLastWin.length === 0) {
-        return 1;
+        return 1; // ✅ no losing streak yet → start with 1
     }
 
-    const firstBetInCurrentSeries = betsAfterLastWin[0];
+    // Total losses in the current losing streak
     const totalLosses = betsAfterLastWin.reduce((sum, bet) => sum + bet.amount, 0);
 
+    // ✅ Calculate next bet to recover all losses + 25% profit
     if (currentOdds && currentOdds > 0) {
-        return firstBetInCurrentSeries.amount + (totalLosses * (lastBet.amount / currentOdds));
+        const targetReturn = totalLosses * 1.25; // recover +25%
+        const requiredBet = targetReturn / currentOdds;
+        return requiredBet + 1; // ✅ add 1 only when there is a losing streak
     }
 
-    return firstBetInCurrentSeries.amount + totalLosses;
+    // If no odds provided, just return the target total (fallback)
+    return totalLosses * 1.25 + 1;
 }
 
     // Calculate current drawdown for a team
