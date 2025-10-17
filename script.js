@@ -173,12 +173,12 @@ class DrawBettingTracker {
         .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
     if (teamBets.length === 0) {
-        return 0; // No previous bets
+        return 1; // No previous bets, start with 1
     }
 
     const lastBet = teamBets[teamBets.length - 1];
     if (lastBet.result === 'win') {
-        return lastBet.amount; // After a win, repeat the same base amount
+        return 1; // Reset after a win
     }
 
     // Find index of the last winning bet
@@ -190,7 +190,7 @@ class DrawBettingTracker {
         : teamBets.slice(lastWinIndex + 1);
 
     if (betsAfterLastWin.length === 0) {
-        return 0;
+        return 1;
     }
 
     const firstBetInCurrentSeries = betsAfterLastWin[0];
