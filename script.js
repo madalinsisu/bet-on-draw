@@ -189,9 +189,6 @@ class DrawBettingTracker {
         ? teamBets
         : teamBets.slice(lastWinIndex + 1);
 
-    // Exclude the last (current) bet — we’re calculating the *next* one
-    betsAfterLastWin = betsAfterLastWin.slice(0, -1);
-
     if (betsAfterLastWin.length === 0) {
         return 1; // ✅ no losing streak yet → start with 1
     }
