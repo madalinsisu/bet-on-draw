@@ -210,18 +210,26 @@ class DrawBettingTracker {
 
     // Calculate current drawdown for a team
     calculateDrawdown(teamId) {
-        const teamBets = this.bets.filter(b => b.teamId === teamId);
-        const completedBets = teamBets.filter(b => b.result !== null);
-        if (completedBets.length === 0) return 0;
-        const lastBet = completedBets[completedBets.length - 1];
-        // If last bet is a win, drawdown is 0
-        if (lastBet.result === 'win') return 0;
-        const totalBet = completedBets.reduce((sum, bet) => sum + bet.amount, 0);
-        const totalWinnings = completedBets
-            .filter(b => b.result === 'win')
-            .reduce((sum, bet) => sum + (bet.amount * bet.odds), 0);
-        return totalBet - totalWinnings;
-    }
+    const teamBets = this.bets.filter(b => b.teamId === teamId);
+    const completedBets = teamBets.filter(b => b.result !== null);
+    if (completedBets.length === 0) return 0;
+
+    // Find index of the last winning bet
+    const lastWinIndex = completedBets.map(b => b.result).lastIndexOf('win');
+    // Consider only bets after the last win
+    const betsAfterLastWin = lastWinIndex === -1
+        ? completedBets
+        : completedBets.slice(lastWinIndex + 1);
+
+    if (betsAfterLastWin.length === 0) return 0;
+
+    const totalBet = betsAfterLastWin.reduce((sum, bet) => sum + bet.amount, 0);
+    const totalWinnings = betsAfterLastWin
+        .filter(b => b.result === 'win')
+        .reduce((sum, bet) => sum + (bet.amount * bet.odds), 0);
+
+    return totalBet - totalWinnings;
+}
 
     // Calculate total winnings for a team
     calculateTotalWinnings(teamId) {
